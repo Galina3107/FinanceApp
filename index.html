@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ניהול פיננסי</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- iOS PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finance">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#6366F1">
+
+    <!-- Fonts & Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="lib/chart.min.js"></script>
+    <script src="lib/xlsx.full.min.js"></script>
+</head>
+<body>
+    <!-- Lock Screen -->
+    <div id="lock-screen" class="lock-screen" data-enabled="false">
+        <div class="lock-screen-content">
+            <div class="lock-icon">🔒</div>
+            <h2 data-i18n="appLocked">האפליקציה נעולה</h2>
+            <p class="lock-subtitle" data-i18n="enterPinToUnlock">הזן קוד PIN לביטול נעילה</p>
+            <div class="pin-input-container">
+                <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-digit" maxlength="1" autocomplete="off">
+                <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-digit" maxlength="1" autocomplete="off">
+                <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-digit" maxlength="1" autocomplete="off">
+                <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-digit" maxlength="1" autocomplete="off">
+            </div>
+            <p class="pin-error" id="pin-error"></p>
+            <button class="forgot-pin-link" id="forgot-pin-btn" data-i18n="forgotPin">שכחת קוד?</button>
+            <div id="forgot-pin-confirm" class="forgot-pin-confirm" style="display: none;">
+                <p class="forgot-pin-warning" data-i18n="forgotPinWarning">⚠️ כל הנתונים המוצפנים יימחקו לצמיתות. פעולה זו בלתי הפיכה!</p>
+                <div class="forgot-pin-actions">
+                    <button class="btn btn-danger" id="forgot-pin-reset" data-i18n="forgotPinReset">מחק הכל ואפס</button>
+                    <button class="btn btn-secondary" id="forgot-pin-cancel" data-i18n="forgotPinCancel">ביטול</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h1 data-i18n="appTitle">💰 ניהול פיננסי</h1>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" data-page="dashboard">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text" data-i18n="navDashboard">לוח בקרה</span>
+            </li>
+            <li class="nav-item" data-page="upload">
+                <span class="nav-icon">📤</span>
+                <span class="nav-text" data-i18n="navUpload">העלאת קובץ</span>
+            </li>
+            <li class="nav-item" data-page="transactions">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text" data-i18n="navTransactions">פעולות</span>
+            </li>
+            <li class="nav-item" data-page="categories">
+                <span class="nav-icon">🏷️</span>
+                <span class="nav-text" data-i18n="navCategories">קטגוריות</span>
+            </li>
+            <li class="nav-item" data-page="goals">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-text" data-i18n="navGoals">מטרות חיסכון</span>
+            </li>
+            <li class="nav-item" data-page="income">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text" data-i18n="navIncome">הכנסות</span>
+            </li>
+            <li class="nav-item" data-page="future">
+                <span class="nav-icon">📅</span>
+                <span class="nav-text" data-i18n="navFuture">הוצאות עתידיות</span>
+            </li>
+            <li class="nav-item" data-page="budget">
+                <span class="nav-icon">💵</span>
+                <span class="nav-text" data-i18n="navBudget">תקציב</span>
+            </li>
+            <li class="nav-item" data-page="settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text" data-i18n="navSettings">הגדרות</span>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Page -->
+        <section id="page-dashboard" class="page active">
+            <div class="page-header">
+                <h2 data-i18n="dashboardTitle">לוח בקרה</h2>
+                <div class="date-selector">
+                    <select id="dashboard-month"></select>
+                    <select id="dashboard-year"></select>
+                </div>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card summary-card income">
+                    <h3 data-i18n="income">הכנסות</h3>
+                    <p class="amount" id="total-income">₪0</p>
+                </div>
+                <div class="card summary-card expenses">
+                    <h3 data-i18n="expenses">הוצאות</h3>
+                    <p class="amount" id="total-expenses">₪0</p>
+                </div>
+                <div class="card summary-card balance">
+                    <h3 data-i18n="balance">יתרה</h3>
+                    <p class="amount" id="total-balance">₪0</p>
+                </div>
+                <div class="card summary-card savings">
+                    <h3 data-i18n="savings">חיסכון</h3>
+                    <p class="amount" id="total-savings">₪0</p>
+                </div>
+            </div>
+            <div class="dashboard-charts">
+                <div class="card chart-card">
+                    <h3 data-i18n="expensesByCategory">התפלגות הוצאות לפי קטגוריה</h3>
+                    <div class="chart-container">
+                        <canvas id="expenses-pie-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card chart-card">
+                    <h3 data-i18n="expensesByMonth">הוצאות לפי חודש</h3>
+                    <div class="chart-container">
+                        <canvas id="monthly-bar-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upload Page -->
+        <section id="page-upload" class="page">
+            <div class="page-header">
+                <h2 data-i18n="uploadTitle">העלאת קובץ אקסל</h2>
+            </div>
+            <div class="card">
+                <div class="upload-area" id="upload-area">
+                    <span class="upload-icon">📂</span>
+                    <p data-i18n="dragOrClick">גרור קובץ אקסל לכאן או לחץ לבחירה</p>
+                    <input type="file" id="file-input" accept=".xlsx,.xls" hidden>
+                </div>
+                <div class="sheet-comment">
+                    <label data-i18n="sheetComment">הערה לגיליון (אופציונלי):</label>
+                    <textarea id="sheet-comment" data-i18n-placeholder="sheetCommentPlaceholder" placeholder="הוסף הערה שתשמר עם כל הפעולות מגיליון זה..."></textarea>
+                </div>
+            </div>
+            <div id="upload-preview" class="card" style="display: none;">
+                <div class="section-header">
+                    <h3 data-i18n="preview">תצוגה מקדימה</h3>
+                    <div class="preview-actions">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="save-category-rules" checked>
+                            <span data-i18n="rememberCategories">זכור קטגוריות להבא</span>
+                        </label>
+                        <button class="btn btn-danger" id="cancel-upload" data-i18n="cancel">ביטול</button>
+                        <button class="btn btn-primary" id="confirm-upload" data-i18n="confirmAndAdd">אשר והוסף לנתונים</button>
+                    </div>
+                </div>
+                <div class="table-container" id="preview-table"></div>
+            </div>
+        </section>
+
+        <!-- Transactions Page -->
+        <section id="page-transactions" class="page">
+            <div class="page-header">
+                <h2 data-i18n="transactionsTitle">פעולות</h2>
+                <div class="header-actions">
+                    <input type="text" id="search-transactions" class="search-input" data-i18n-placeholder="search" placeholder="חיפוש...">
+                    <div class="view-toggle">
+                        <button class="btn btn-sm active" data-view="table" data-i18n-title="tableView" title="תצוגת טבלה">📋</button>
+                        <button class="btn btn-sm" data-view="category" data-i18n-title="categoryView" title="תצוגה לפי קטגוריה">🏷️</button>
+                    </div>
+                    <div class="date-selector">
+                        <select id="transactions-month"></select>
+                        <select id="transactions-year"></select>
+                    </div>
+                    <button class="btn btn-success" id="save-all-transactions" style="display: none;" data-i18n="saveAll">💾 שמור הכל</button>
+                    <button class="btn btn-danger" id="delete-selected" style="display: none;" data-i18n="deleteSelected">🗑️ מחק נבחרים</button>
+                    <button class="btn btn-primary" id="add-expense-btn" data-i18n="newExpense">+ הוצאה חדשה</button>
+                    <button class="btn btn-primary" id="export-transactions" data-i18n="exportBtn">📥 ייצוא</button>
+                </div>
+            </div>
+            <div class="card">
+                <div id="transactions-view">
+                    <div class="table-container" id="transactions-table-view">
+                        <table id="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th class="checkbox-col"><input type="checkbox" id="select-all"></th>
+                                    <th data-i18n="date">תאריך</th>
+                                    <th data-i18n="description">תיאור</th>
+                                    <th data-i18n="amount">סכום</th>
+                                    <th data-i18n="category">קטגוריה</th>
+                                    <th data-i18n="subcategory">תת-קטגוריה</th>
+                                    <th data-i18n="comment">הערה</th>
+                                    <th data-i18n="actions">פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="transactions-category-view" style="display: none;">
+                        <div class="category-breakdown" id="category-breakdown"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Page -->
+        <section id="page-categories" class="page">
+            <div class="page-header">
+                <h2 data-i18n="categoriesTitle">קטגוריות</h2>
+                <div class="header-actions">
+                    <div class="date-selector">
+                        <select id="categories-month"></select>
+                        <select id="categories-year"></select>
+                    </div>
+                    <button class="btn btn-secondary" id="edit-mode-btn" data-i18n="editMode">✏️ מצב עריכה</button>
+                    <button class="btn btn-primary" id="add-category-btn" data-i18n="newCategory">+ קטגוריה חדשה</button>
+                </div>
+            </div>
+            <div class="categories-container" id="categories-list"></div>
+        </section>
+
+        <!-- Goals Page -->
+        <section id="page-goals" class="page">
+            <div class="page-header">
+                <h2 data-i18n="goalsTitle">מטרות חיסכון</h2>
+                <button class="btn btn-primary" id="add-goal-btn" data-i18n="newGoal">+ מטרה חדשה</button>
+            </div>
+            <div class="goals-container" id="goals-list"></div>
+        </section>
+
+        <!-- Future Expenses Page -->
+        <section id="page-future" class="page">
+            <div class="page-header">
+                <h2 data-i18n="futureTitle">הוצאות עתידיות</h2>
+                <div class="header-actions">
+                    <div class="future-view-toggle view-toggle">
+                        <button class="btn btn-sm active" data-view="list" data-i18n-title="listView" title="תצוגת רשימה">📋</button>
+                        <button class="btn btn-sm" data-view="month" data-i18n-title="monthView" title="תצוגה לפי חודש">📅</button>
+                    </div>
+                    <button class="btn btn-primary" id="add-future-btn" data-i18n="newFutureExpense">+ הוצאה עתידית</button>
+                </div>
+            </div>
+            <div id="future-container"></div>
+        </section>
+
+        <!-- Income Page -->
+        <section id="page-income" class="page">
+            <div class="page-header">
+                <h2 data-i18n="incomeTitle">הכנסות</h2>
+                <div class="header-actions">
+                    <div class="income-view-toggle view-toggle">
+                        <button class="btn btn-sm active" data-view="list" data-i18n-title="listView" title="תצוגת רשימה">📋</button>
+                        <button class="btn btn-sm" data-view="month" data-i18n-title="monthView" title="תצוגה לפי חודש">📅</button>
+                    </div>
+                    <button class="btn btn-primary" id="add-income-btn" data-i18n="newIncome">+ הכנסה חדשה</button>
+                </div>
+            </div>
+            <div id="income-container"></div>
+        </section>
+
+        <!-- Budget Page -->
+        <section id="page-budget" class="page">
+            <div class="page-header">
+                <h2 data-i18n="budgetTitle">תקציב חודשי</h2>
+                <div class="date-selector">
+                    <select id="budget-month"></select>
+                    <select id="budget-year"></select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-header">
+                    <h3 data-i18n="budgetSummary">📊 סיכום תקציב</h3>
+                </div>
+                <div class="budget-summary" id="budget-summary"></div>
+            </div>
+            <div class="card">
+                <div class="section-header">
+                    <h3 data-i18n="budgetByCategory">תקציב לפי קטגוריה</h3>
+                </div>
+                <div class="budget-categories" id="budget-categories"></div>
+            </div>
+        </section>
+
+        <!-- Settings Page -->
+        <section id="page-settings" class="page">
+            <div class="page-header">
+                <h2 data-i18n="settingsTitle">הגדרות</h2>
+            </div>
+            <div class="settings-grid">
+                <div class="card">
+                    <div class="section-header">
+                        <h3 data-i18n="security">🔐 אבטחה</h3>
+                    </div>
+                    <p class="text-secondary" data-i18n="securityDesc">הגן על הנתונים הפיננסיים שלך באמצעות קוד PIN</p>
+                    <div class="settings-actions">
+                        <button class="btn btn-primary" id="toggle-pin-btn" data-i18n="setPin">🔒 הגדר קוד PIN</button>
+                    </div>
+                    <div id="security-options" style="display: none; margin-top: 16px;">
+                        <div class="settings-actions">
+                            <button class="btn btn-secondary" id="change-pin-btn" data-i18n="changePin">🔑 שנה קוד PIN</button>
+                        </div>
+                        <div class="auto-lock-setting" style="margin-top: 12px;">
+                            <label data-i18n="autoLockLabel">נעילה אוטומטית אחרי:</label>
+                            <select id="auto-lock-select" class="form-control" style="width: auto; display: inline-block; margin: 0 8px;">
+                                <option value="0" data-i18n="autoLockNever">ללא</option>
+                                <option value="1">1 min</option>
+                                <option value="5" selected>5 min</option>
+                                <option value="15">15 min</option>
+                                <option value="30">30 min</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="section-header">
+                        <h3 data-i18n="language">🌐 שפה</h3>
+                    </div>
+                    <p class="text-secondary" data-i18n="languageDesc">בחר את שפת הממשק</p>
+                    <div class="settings-actions language-selector">
+                        <button class="btn lang-btn" id="lang-he" data-lang="he">🇮🇱 עברית</button>
+                        <button class="btn lang-btn" id="lang-en" data-lang="en">🇬🇧 English</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="section-header">
+                        <h3 data-i18n="backupRestore">💾 גיבוי ושחזור נתונים</h3>
+                    </div>
+                    <p class="text-secondary" data-i18n="backupDesc">גבה את כל הנתונים שלך לקובץ או שחזר מגיבוי קודם.</p>
+                    <div class="settings-actions">
+                        <button class="btn btn-primary" id="backup-data" data-i18n="exportBackup">📥 ייצוא גיבוי</button>
+                        <button class="btn btn-secondary" id="restore-data" data-i18n="restoreBackup">📤 שחזור מגיבוי</button>
+                        <input type="file" id="restore-file-input" accept=".json" hidden>
+                    </div>
+                    <p class="text-secondary" style="margin-top: 12px; font-size: 0.8rem;" data-i18n="backupIncludes">
+                        הגיבוי כולל: פעולות, קטגוריות, מטרות, הוצאות עתידיות והכנסה חודשית.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="section-header">
+                        <h3 data-i18n="deleteData">🗑️ מחיקת נתונים</h3>
+                    </div>
+                    <p class="text-secondary" data-i18n="deleteDataDesc">מחק את כל הנתונים מהאפליקציה. פעולה זו בלתי הפיכה!</p>
+                    <div class="settings-actions">
+                        <button class="btn btn-danger" id="clear-all-data" data-i18n="clearAllData">🗑️ מחק את כל הנתונים</button>
+                        <button class="btn btn-warning" id="clear-income-data" data-i18n="clearIncome">💰 נקה הכנסות</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="section-header">
+                        <h3 data-i18n="autoRules">🏷️ כללי קטגוריות אוטומטיים</h3>
+                    </div>
+                    <p class="text-secondary" data-i18n="autoRulesDesc">המערכת לומדת לשייך קטגוריות אוטומטית בהתבסס על פעולות קודמות.</p>
+                    <div id="category-rules-list" class="rules-list"></div>
+                    <div class="settings-actions">
+                        <button class="btn btn-secondary" id="view-category-rules"><span data-i18n="viewRules">📋 הצג כללים</span> (<span id="rules-count">0</span>)</button>
+                        <button class="btn btn-danger" id="clear-category-rules" data-i18n="clearRules">🗑️ נקה כללים</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="section-header">
+                        <h3 data-i18n="about">ℹ️ אודות</h3>
+                    </div>
+                    <p><strong data-i18n="appName">ניהול פיננסי</strong></p>
+                    <p class="text-secondary" data-i18n="version">גרסה 3.0</p>
+                    <p class="text-secondary" data-i18n="appDesc">אפליקציית ניהול פיננסי אישי</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modal-title"></h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel" data-i18n="cancel">ביטול</button>
+                <button class="btn btn-primary" id="modal-confirm" data-i18n="confirm">אישור</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script src="js/db.js"></script>
+    <script src="js/crypto.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/categories.js"></script>
+    <script src="js/transactions.js"></script>
+    <script src="js/goals.js"></script>
+    <script src="js/future-expenses.js"></script>
+    <script src="js/income.js"></script>
+    <script src="js/budget.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/security.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

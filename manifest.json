@@ -1,0 +1,33 @@
+{
+  "name": "ניהול פיננסי - Financial Manager",
+  "short_name": "Finance",
+  "description": "Personal financial management app / אפליקציית ניהול פיננסי אישי",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F8FAFC",
+  "theme_color": "#6366F1",
+  "dir": "auto",
+  "lang": "he",
+  "categories": ["finance", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
