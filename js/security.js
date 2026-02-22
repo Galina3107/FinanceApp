@@ -95,9 +95,15 @@ const Security = {
     // ── PIN hashing ──
 
     async hashPin(pin) {
+        // Use the same random salt from crypto module for PIN hashing
+        const salt = await AppCrypto.getSalt();
         const encoder = new TextEncoder();
-        const data = encoder.encode(pin + 'finance-app-salt-2026');
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const pinBytes = encoder.encode(pin);
+        // Combine salt + pin for strong hashing
+        const combined = new Uint8Array(salt.length + pinBytes.length);
+        combined.set(salt);
+        combined.set(pinBytes, salt.length);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     },
@@ -117,8 +123,8 @@ const Security = {
         await Database.setSetting(this.SECURITY_ENABLED_KEY, true);
 
         // Derive encryption key and encrypt all existing data
-        await Crypto.activate(pin);
-        await Crypto.encryptAllData();
+        await AppCrypto.activate(pin);
+        await AppCrypto.encryptAllData();
 
         const lockScreen = document.getElementById('lock-screen');
         if (lockScreen) lockScreen.dataset.enabled = 'true';
@@ -126,13 +132,13 @@ const Security = {
 
     async removePin() {
         // Decrypt all data first (crypto must be active)
-        await Crypto.decryptAllData();
-        Crypto.deactivate();
+        await AppCrypto.decryptAllData();
+        AppCrypto.deactivate();
 
         await Database.setSetting(this.PIN_HASH_KEY, null);
         await Database.setSetting(this.SECURITY_ENABLED_KEY, false);
         await Database.setSetting(this.AUTO_LOCK_KEY, 0);
-        await Database.setSetting(Crypto.SALT_KEY, null);
+        await Database.setSetting(AppCrypto.SALT_KEY, null);
 
         const lockScreen = document.getElementById('lock-screen');
         if (lockScreen) lockScreen.dataset.enabled = 'false';
@@ -160,7 +166,7 @@ const Security = {
     },
 
     lock() {
-        Crypto.deactivate(); // Clear encryption key from memory
+        AppCrypto.deactivate(); // Clear encryption key from memory
         this.showLock();
     },
 
@@ -251,7 +257,7 @@ const Security = {
         if (valid) {
             this.failedAttempts = 0;
             // Derive encryption key from PIN
-            await Crypto.activate(pin);
+            await AppCrypto.activate(pin);
             this.unlock();
         } else {
             this.failedAttempts++;
@@ -396,7 +402,7 @@ const Security = {
         }
 
         showToast(t('reEncryptingData'));
-        await Crypto.reEncryptAll(newPin);
+        await AppCrypto.reEncryptAll(newPin);
 
         // Update PIN hash
         const hash = await this.hashPin(newPin);

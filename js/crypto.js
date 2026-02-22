@@ -1,7 +1,7 @@
 // Crypto Module - AES-256-GCM encryption with PBKDF2 key derivation
 // All financial data is encrypted at rest. The PIN is the key.
 
-const Crypto = {
+const AppCrypto = {
     key: null, // AES-GCM key, only held in memory while app is unlocked
     SALT_KEY: 'cryptoSalt',
     ITERATIONS: 100000,

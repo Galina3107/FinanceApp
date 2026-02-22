@@ -66,7 +66,7 @@ const Database = {
     // ── Encryption check ──
 
     _shouldEncrypt(storeName) {
-        return typeof Crypto !== 'undefined' && Crypto.isActive() && storeName !== STORES.SETTINGS;
+        return typeof AppCrypto !== 'undefined' && AppCrypto.isActive() && storeName !== STORES.SETTINGS;
     },
 
     // ── Raw IndexedDB methods (no encryption, used by Crypto module) ──
@@ -126,7 +126,7 @@ const Database = {
 
     async add(storeName, data) {
         if (this._shouldEncrypt(storeName)) {
-            const encrypted = await Crypto.encrypt(data);
+            const encrypted = await AppCrypto.encrypt(data);
             return this._rawAdd(storeName, encrypted);
         }
         return this._rawAdd(storeName, data);
@@ -135,7 +135,7 @@ const Database = {
     async update(storeName, data) {
         if (this._shouldEncrypt(storeName)) {
             const id = data.id;
-            const encrypted = await Crypto.encrypt(data);
+            const encrypted = await AppCrypto.encrypt(data);
             encrypted.id = id;
             return this._rawUpdate(storeName, encrypted);
         }
@@ -155,7 +155,7 @@ const Database = {
     async get(storeName, id) {
         const result = await this._rawGet(storeName, id);
         if (result && this._shouldEncrypt(storeName) && result._enc) {
-            const decrypted = await Crypto.decrypt(result);
+            const decrypted = await AppCrypto.decrypt(result);
             decrypted.id = result.id;
             return decrypted;
         }
@@ -168,7 +168,7 @@ const Database = {
             const decrypted = [];
             for (const record of results) {
                 if (record._enc) {
-                    const data = await Crypto.decrypt(record);
+                    const data = await AppCrypto.decrypt(record);
                     data.id = record.id;
                     decrypted.push(data);
                 } else {
