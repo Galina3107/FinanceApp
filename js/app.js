@@ -79,14 +79,46 @@ const App = {
     },
 
     setupNavigation() {
-        const navItems = document.querySelectorAll('.nav-item');
-        
+        // Tab items and sidebar nav items
+        const navItems = document.querySelectorAll('.nav-item[data-page]');
         navItems.forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.dataset.page;
                 this.navigateTo(page);
             });
         });
+
+        // Hamburger menu items
+        const hamburgerItems = document.querySelectorAll('.hamburger-item[data-page]');
+        hamburgerItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.dataset.page;
+                this.closeHamburger();
+                this.navigateTo(page);
+            });
+        });
+
+        // Hamburger open/close
+        document.getElementById('hamburger-btn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.openHamburger();
+        });
+        document.getElementById('hamburger-close')?.addEventListener('click', () => {
+            this.closeHamburger();
+        });
+        document.getElementById('hamburger-overlay')?.addEventListener('click', () => {
+            this.closeHamburger();
+        });
+    },
+
+    openHamburger() {
+        document.getElementById('hamburger-overlay')?.classList.add('show');
+        document.getElementById('hamburger-menu')?.classList.add('show');
+    },
+
+    closeHamburger() {
+        document.getElementById('hamburger-overlay')?.classList.remove('show');
+        document.getElementById('hamburger-menu')?.classList.remove('show');
     },
 
     setupLanguageSwitcher() {
@@ -128,10 +160,22 @@ const App = {
     },
 
     navigateTo(page) {
-        // Update navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
+        // Update sidebar/tab navigation
+        document.querySelectorAll('.nav-item[data-page]').forEach(item => {
             item.classList.toggle('active', item.dataset.page === page);
         });
+
+        // Update hamburger menu active state
+        document.querySelectorAll('.hamburger-item[data-page]').forEach(item => {
+            item.classList.toggle('active', item.dataset.page === page);
+        });
+
+        // If navigating to a hamburger-menu page on mobile, highlight the hamburger button
+        const isMenuPage = ['categories', 'goals', 'income', 'future', 'settings'].includes(page);
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        if (hamburgerBtn) {
+            hamburgerBtn.classList.toggle('active', isMenuPage);
+        }
 
         // Update pages
         document.querySelectorAll('.page').forEach(p => {

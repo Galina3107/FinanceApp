@@ -269,6 +269,118 @@ body {
     font-size: 0.95rem;
 }
 
+/* Desktop: hide hamburger button and hamburger menu */
+.hamburger-btn {
+    display: none;
+}
+
+.hamburger-overlay,
+.hamburger-menu {
+    display: none;
+}
+
+/* ===== Hamburger Menu (slide-up sheet) ===== */
+.hamburger-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.hamburger-overlay.show {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.hamburger-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border-radius: 16px 16px 0 0;
+    z-index: 1200;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.hamburger-menu.show {
+    display: block;
+    transform: translateY(0);
+}
+
+.hamburger-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.hamburger-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.hamburger-close {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 8px;
+    border-radius: var(--radius);
+    transition: background 0.2s;
+}
+
+.hamburger-close:hover {
+    background: var(--bg-color);
+}
+
+.hamburger-list {
+    list-style: none;
+    padding: 8px 0 16px;
+}
+
+.hamburger-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.hamburger-item:hover {
+    background: var(--bg-color);
+}
+
+.hamburger-item.active {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.hamburger-icon {
+    font-size: 1.4rem;
+    width: 32px;
+    text-align: center;
+}
+
 /* ===== Main Content ===== */
 .main-content {
     flex: 1;
@@ -1574,11 +1686,21 @@ tr.modified:hover {
         display: flex;
         flex-direction: row;
         width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
-    .nav-item {
+    /* Hide menu-only items from bottom bar on mobile */
+    .nav-item.menu-item {
+        display: none !important;
+    }
+
+    /* Show hamburger button on mobile */
+    .hamburger-btn {
+        display: flex !important;
+    }
+
+    /* Bottom tab items: equal width */
+    .nav-item.tab-item,
+    .nav-item.hamburger-btn {
         flex: 1;
         flex-direction: column;
         justify-content: center;
@@ -1589,16 +1711,34 @@ tr.modified:hover {
     }
 
     .nav-icon {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
 
     .nav-text {
         display: block !important;
-        font-size: 0.6rem;
+        font-size: 0.65rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 60px;
+        max-width: 72px;
+    }
+
+    /* Enable hamburger menu on mobile */
+    .hamburger-overlay {
+        display: none;
+    }
+
+    .hamburger-overlay.show {
+        display: block;
+    }
+
+    .hamburger-menu {
+        display: block;
+    }
+
+    .hamburger-menu:not(.show) {
+        display: block;
+        pointer-events: none;
     }
 
     .main-content {
@@ -1733,6 +1873,92 @@ tr.modified:hover {
         font-size: 0.85rem !important;
         padding: 8px 10px;
         white-space: nowrap;
+    }
+
+    /* ===== Transactions Page Mobile ===== */
+
+    /* Search input full width on mobile */
+    .search-input {
+        min-width: 0;
+        width: 100%;
+        flex: 1 1 100%;
+        order: -1;
+    }
+
+    /* View toggle + date selector on same row */
+    .view-toggle {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* Compact table for transactions */
+    #page-transactions table {
+        min-width: 480px;
+    }
+
+    #page-transactions th,
+    #page-transactions td {
+        padding: 6px 3px;
+    }
+
+    /* Hide checkbox and actions columns on mobile to save space */
+    #page-transactions .checkbox-col,
+    #page-transactions th:last-child,
+    #page-transactions td:last-child {
+        display: none;
+    }
+
+    /* Also hide select-all and delete-selected on mobile */
+    #select-all,
+    #delete-selected {
+        display: none !important;
+    }
+
+    /* Narrower selects inside transactions table */
+    #page-transactions td select {
+        min-width: 70px;
+        max-width: 90px;
+        padding: 4px 2px;
+        min-height: 36px;
+    }
+
+    #page-transactions td select.table-category,
+    #page-transactions td select.table-subcategory {
+        max-width: 90px;
+    }
+
+    /* Compact inline comment */
+    #page-transactions .inline-comment {
+        gap: 2px;
+    }
+
+    #page-transactions .table-comment {
+        width: 60px;
+        min-width: 50px;
+        padding: 4px 4px;
+        min-height: 36px;
+    }
+
+    #page-transactions .save-comment {
+        padding: 2px 4px;
+        min-height: 30px;
+    }
+
+    /* Category view is friendlier on mobile */
+    .category-section-header {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    .category-transaction-item {
+        padding: 8px 12px;
+        gap: 8px;
+        font-size: 0.85rem;
+    }
+
+    .category-transaction-item .trans-date {
+        min-width: 60px;
+        font-size: 0.8rem;
     }
 
     /* Toast above bottom nav */

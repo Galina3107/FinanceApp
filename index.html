@@ -48,50 +48,87 @@
         </div>
     </div>
 
-    <!-- Sidebar -->
-    <nav class="sidebar">
+    <!-- Bottom Tab Bar (Mobile) + Sidebar (Desktop) -->
+    <nav class="sidebar" id="main-nav">
         <div class="sidebar-header">
             <h1 data-i18n="appTitle">💰 ניהול פיננסי</h1>
         </div>
         <ul class="nav-menu">
-            <li class="nav-item active" data-page="dashboard">
+            <li class="nav-item tab-item active" data-page="dashboard">
                 <span class="nav-icon">📊</span>
                 <span class="nav-text" data-i18n="navDashboard">לוח בקרה</span>
             </li>
-            <li class="nav-item" data-page="upload">
+            <li class="nav-item tab-item" data-page="upload">
                 <span class="nav-icon">📤</span>
                 <span class="nav-text" data-i18n="navUpload">העלאת קובץ</span>
             </li>
-            <li class="nav-item" data-page="transactions">
+            <li class="nav-item tab-item" data-page="transactions">
                 <span class="nav-icon">📋</span>
                 <span class="nav-text" data-i18n="navTransactions">פעולות</span>
             </li>
-            <li class="nav-item" data-page="categories">
-                <span class="nav-icon">🏷️</span>
-                <span class="nav-text" data-i18n="navCategories">קטגוריות</span>
-            </li>
-            <li class="nav-item" data-page="goals">
-                <span class="nav-icon">🎯</span>
-                <span class="nav-text" data-i18n="navGoals">מטרות חיסכון</span>
-            </li>
-            <li class="nav-item" data-page="income">
-                <span class="nav-icon">💰</span>
-                <span class="nav-text" data-i18n="navIncome">הכנסות</span>
-            </li>
-            <li class="nav-item" data-page="future">
-                <span class="nav-icon">📅</span>
-                <span class="nav-text" data-i18n="navFuture">הוצאות עתידיות</span>
-            </li>
-            <li class="nav-item" data-page="budget">
+            <li class="nav-item tab-item" data-page="budget">
                 <span class="nav-icon">💵</span>
                 <span class="nav-text" data-i18n="navBudget">תקציב</span>
             </li>
-            <li class="nav-item" data-page="settings">
+            <!-- Desktop-only nav items (hidden on mobile, shown in hamburger) -->
+            <li class="nav-item menu-item" data-page="categories">
+                <span class="nav-icon">🏷️</span>
+                <span class="nav-text" data-i18n="navCategories">קטגוריות</span>
+            </li>
+            <li class="nav-item menu-item" data-page="goals">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-text" data-i18n="navGoals">מטרות חיסכון</span>
+            </li>
+            <li class="nav-item menu-item" data-page="income">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text" data-i18n="navIncome">הכנסות</span>
+            </li>
+            <li class="nav-item menu-item" data-page="future">
+                <span class="nav-icon">📅</span>
+                <span class="nav-text" data-i18n="navFuture">הוצאות עתידיות</span>
+            </li>
+            <li class="nav-item menu-item" data-page="settings">
                 <span class="nav-icon">⚙️</span>
                 <span class="nav-text" data-i18n="navSettings">הגדרות</span>
             </li>
+            <!-- Hamburger button (mobile only) -->
+            <li class="nav-item hamburger-btn" id="hamburger-btn">
+                <span class="nav-icon">☰</span>
+                <span class="nav-text" data-i18n="navMore">עוד</span>
+            </li>
         </ul>
     </nav>
+
+    <!-- Hamburger Slide-up Menu (Mobile only) -->
+    <div class="hamburger-overlay" id="hamburger-overlay"></div>
+    <div class="hamburger-menu" id="hamburger-menu">
+        <div class="hamburger-header">
+            <h3 data-i18n="navMore">עוד</h3>
+            <button class="hamburger-close" id="hamburger-close">✕</button>
+        </div>
+        <ul class="hamburger-list">
+            <li class="hamburger-item" data-page="categories">
+                <span class="hamburger-icon">🏷️</span>
+                <span data-i18n="navCategories">קטגוריות</span>
+            </li>
+            <li class="hamburger-item" data-page="goals">
+                <span class="hamburger-icon">🎯</span>
+                <span data-i18n="navGoals">מטרות חיסכון</span>
+            </li>
+            <li class="hamburger-item" data-page="income">
+                <span class="hamburger-icon">💰</span>
+                <span data-i18n="navIncome">הכנסות</span>
+            </li>
+            <li class="hamburger-item" data-page="future">
+                <span class="hamburger-icon">📅</span>
+                <span data-i18n="navFuture">הוצאות עתידיות</span>
+            </li>
+            <li class="hamburger-item" data-page="settings">
+                <span class="hamburger-icon">⚙️</span>
+                <span data-i18n="navSettings">הגדרות</span>
+            </li>
+        </ul>
+    </div>
 
     <!-- Main Content -->
     <main class="main-content">

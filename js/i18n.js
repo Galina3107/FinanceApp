@@ -18,6 +18,7 @@ const I18n = {
             navFuture: 'הוצאות עתידיות',
             navBudget: 'תקציב',
             navSettings: 'הגדרות',
+            navMore: 'עוד',
             
             // Dashboard
             dashboardTitle: 'לוח בקרה',
@@ -382,6 +383,7 @@ const I18n = {
             navFuture: 'Future Expenses',
             navBudget: 'Budget',
             navSettings: 'Settings',
+            navMore: 'More',
             
             // Dashboard
             dashboardTitle: 'Dashboard',

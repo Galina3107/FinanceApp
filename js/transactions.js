@@ -3,10 +3,16 @@
 const Transactions = {
     transactions: [],
     pendingData: [],
-    currentView: 'table',
+    currentView: window.innerWidth <= 480 ? 'category' : 'table',
     modifiedRows: new Set(),
     
     async init() {
+        // Set correct active toggle button for initial view
+        if (this.currentView === 'category') {
+            document.querySelectorAll('.view-toggle .btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.view === 'category');
+            });
+        }
         await this.loadTransactions();
         this.setupUpload();
         this.bindEvents();
