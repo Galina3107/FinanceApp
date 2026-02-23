@@ -1716,29 +1716,63 @@ tr.modified:hover {
 
     .nav-text {
         display: block !important;
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 72px;
+        max-width: 56px;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    /* Prevent global button sizing from affecting nav items */
+    .nav-item,
+    .nav-item .nav-icon,
+    .nav-item .nav-text {
+        min-height: auto;
+        font-size: 0.6rem;
+    }
+
+    .nav-item .nav-icon {
+        font-size: 1.2rem;
     }
 
     /* Enable hamburger menu on mobile */
     .hamburger-overlay {
-        display: none;
+        display: block;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 1100;
     }
 
     .hamburger-overlay.show {
-        display: block;
+        opacity: 1;
+        pointer-events: auto;
     }
 
     .hamburger-menu {
         display: block;
+        transform: translateY(100%);
+        z-index: 1200;
+    }
+
+    .hamburger-menu.show {
+        transform: translateY(0);
+        pointer-events: auto;
     }
 
     .hamburger-menu:not(.show) {
-        display: block;
         pointer-events: none;
+    }
+
+    /* Hamburger items should have proper touch targets */
+    .hamburger-item {
+        min-height: 48px;
+    }
+
+    .hamburger-close {
+        min-height: 44px;
+        min-width: 44px;
     }
 
     .main-content {
