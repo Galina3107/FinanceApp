@@ -171,7 +171,7 @@ const App = {
         });
 
         // If navigating to a hamburger-menu page on mobile, highlight the hamburger button
-        const isMenuPage = ['categories', 'goals', 'income', 'future', 'settings'].includes(page);
+        const isMenuPage = ['upload', 'goals', 'income', 'future', 'settings'].includes(page);
         const hamburgerBtn = document.getElementById('hamburger-btn');
         if (hamburgerBtn) {
             hamburgerBtn.classList.toggle('active', isMenuPage);
