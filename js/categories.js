@@ -295,19 +295,25 @@ const Categories = {
             this.showCategoryModal();
         });
 
+        // Initially hide add-category button (only visible in edit mode)
+        const addCatBtn = document.getElementById('add-category-btn');
+        if (addCatBtn) addCatBtn.style.display = 'none';
+
         document.getElementById('edit-mode-btn')?.addEventListener('click', async () => {
             this.editMode = !this.editMode;
             const btn = document.getElementById('edit-mode-btn');
+            const addCatBtn = document.getElementById('add-category-btn');
             if (this.editMode) {
                 btn.textContent = `✅ ${t('finishEdit')}`;
                 btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-success');
+                if (addCatBtn) addCatBtn.style.display = '';
                 showToast(t('editModeOn'));
             } else {
                 btn.textContent = t('editMode');
                 btn.classList.remove('btn-success');
                 btn.classList.add('btn-secondary');
-                showToast(t('editModeOff'));
+                if (addCatBtn) addCatBtn.style.display = 'none';
             }
             await this.render();
         });

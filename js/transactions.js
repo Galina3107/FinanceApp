@@ -785,6 +785,8 @@ const Transactions = {
         let html = '';
         for (const category of Categories.categories) {
             const categoryTransactions = grouped[category.name] || [];
+            // Skip categories with no transactions in category view
+            if (categoryTransactions.length === 0) continue;
             const total = sumArray(categoryTransactions, 'amount');
 
             html += `

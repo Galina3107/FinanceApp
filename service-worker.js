@@ -1,5 +1,5 @@
 // Service Worker for Finance App PWA
-const CACHE_NAME = 'finance-app-v10';
+const CACHE_NAME = 'finance-app-v11';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
