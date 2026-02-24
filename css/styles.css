@@ -2180,6 +2180,177 @@ tr.modified:hover {
         min-width: 0;
         flex: 1 1 100px;
     }
+
+    /* ===== Upload Preview Mobile ===== */
+    .preview-toolbar {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .preview-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .preview-actions .btn {
+        flex: 1;
+        min-width: 80px;
+    }
+
+    /* Card-layout for preview rows on mobile */
+    .preview-month-content table,
+    #preview-table > .preview-table-content > table {
+        min-width: 0 !important;
+    }
+
+    .preview-month-content thead,
+    #preview-table > .preview-table-content > table > thead {
+        display: none;
+    }
+
+    .preview-month-content tbody tr,
+    #preview-table > .preview-table-content > table > tbody > tr {
+        display: flex;
+        flex-direction: column;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-color);
+        gap: 6px;
+    }
+
+    .preview-month-content tbody td,
+    #preview-table > .preview-table-content > table > tbody > tr > td {
+        display: flex;
+        align-items: center;
+        padding: 2px 0;
+        border: none;
+        font-size: 0.88rem;
+    }
+
+    .preview-month-content tbody td::before,
+    #preview-table > .preview-table-content > table > tbody > tr > td::before {
+        display: none;
+    }
+
+    /* First row: date + amount inline */
+    .preview-month-content tbody td:nth-child(1),
+    #preview-table > .preview-table-content > table > tbody > tr > td:nth-child(1) {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* Second row: description bold */
+    .preview-month-content tbody td:nth-child(2),
+    #preview-table > .preview-table-content > table > tbody > tr > td:nth-child(2) {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    /* Third row: amount */
+    .preview-month-content tbody td:nth-child(3),
+    #preview-table > .preview-table-content > table > tbody > tr > td:nth-child(3) {
+        font-weight: 700;
+        color: var(--danger-color);
+    }
+
+    /* Category & subcategory dropdowns full-width */
+    .preview-month-content tbody td:nth-child(4),
+    .preview-month-content tbody td:nth-child(5),
+    #preview-table > .preview-table-content > table > tbody > tr > td:nth-child(4),
+    #preview-table > .preview-table-content > table > tbody > tr > td:nth-child(5) {
+        width: 100%;
+    }
+
+    .preview-month-content tbody td select,
+    #preview-table > .preview-table-content > table > tbody > tr > td select {
+        width: 100%;
+        min-height: 40px;
+        font-size: 0.9rem;
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 2px solid var(--border-color);
+        background: var(--card-bg);
+    }
+
+    .preview-month-content tbody td select:focus,
+    #preview-table > .preview-table-content > table > tbody > tr > td select:focus {
+        border-color: var(--primary-color);
+        outline: none;
+    }
+
+    /* Highlight auto-assigned category rows */
+    .preview-month-content tr.has-category td:first-child::before,
+    #preview-table tr.has-category td:first-child::before {
+        content: '✓ ';
+        color: var(--success-color);
+    }
+
+    /* Section header actions wrap */
+    #upload-preview .section-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    /* Income summary bar mobile */
+    .income-summary-bar {
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .income-summary-item {
+        min-width: 80px;
+        padding: 6px 8px;
+    }
+
+    .income-summary-item .summary-value {
+        font-size: 0.95rem;
+    }
+
+    /* ===== Finance Cards Mobile ===== */
+    .finance-card {
+        padding: 12px 14px;
+        border-radius: 10px;
+    }
+
+    .finance-card-desc {
+        font-size: 0.93rem;
+    }
+
+    .finance-card-amount {
+        font-size: 1.05rem;
+    }
+
+    .finance-card-bottom {
+        flex-wrap: wrap;
+    }
+
+    .finance-card-actions {
+        gap: 4px;
+    }
+
+    .btn-action {
+        padding: 5px 8px;
+        font-size: 0.75rem;
+    }
+
+    .btn-action.btn-receive {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .finance-month-title {
+        padding: 10px 14px;
+        border-radius: 8px;
+    }
+
+    .finance-month-group-header {
+        padding: 10px 14px;
+    }
+
+    .group-total {
+        font-size: 0.95rem;
+    }
 }
 
 /* LTR iPhone overrides */
@@ -2926,299 +3097,262 @@ tr.ended, tr.inactive {
 
 
 
-/* ===== Income Management ===== */
-.income-total {
+/* ===== Finance Cards (Income & Future Expenses) ===== */
+.finance-cards-list {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
-    color: white;
-    border-radius: 8px;
-    margin-bottom: 16px;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.income-total .total-label {
-    font-size: 0.95rem;
-}
-
-.income-total .total-amount {
-    font-size: 1.4rem;
-    font-weight: 700;
-}
-
-.income-cards {
-    display: grid;
-    gap: 12px;
-}
-
-.income-card {
+.finance-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 14px 16px;
     transition: all 0.2s ease;
+    border-right: 4px solid var(--border-color);
 }
 
-.income-card:hover {
+.finance-card:hover {
     box-shadow: var(--shadow-sm);
 }
 
-.income-card.active {
-    border-right: 4px solid var(--success-color);
-}
+.finance-card.pending { border-right-color: var(--warning-color); }
+.finance-card.paid { border-right-color: var(--success-color); opacity: 0.75; }
+.finance-card.overdue { border-right-color: var(--danger-color); }
+.finance-card.skipped { border-right-color: #94a3b8; opacity: 0.7; }
+.finance-card.future { border-right-color: var(--primary-color); opacity: 0.85; }
+.finance-card.ended { border-right-color: #9ca3af; opacity: 0.6; }
+.finance-card.inactive { border-right-color: #d1d5db; opacity: 0.5; }
 
-.income-card.skipped {
-    border-right: 4px solid var(--warning-color);
-    opacity: 0.8;
-}
-
-.income-card.ended {
-    border-right: 4px solid var(--text-secondary);
-    opacity: 0.6;
-}
-
-.income-card.inactive {
-    opacity: 0.5;
-}
-
-.income-card-header {
+.finance-card-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
 }
 
-.income-type-badge {
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
+.finance-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
 }
 
-.income-type-badge.once {
-    background: #E0F2FE;
-    color: #0369A1;
-}
-
-.income-type-badge.monthly {
-    background: #DCFCE7;
-    color: #166534;
-}
-
-.income-card-body {
-    margin-bottom: 12px;
-}
-
-.income-description {
+.finance-card-desc {
     font-size: 1rem;
-    margin: 0 0 4px 0;
-}
-
-.income-amount {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--success-color);
-    margin: 0;
-}
-
-.income-comment {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin: 8px 0 0 0;
-    font-style: italic;
-}
-
-.income-card-footer {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-color);
-}
-
-.income-date, .income-end {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-.income-monthly-actions {
-    display: flex;
-    gap: 6px;
-}
-
-/* ===== Income Compact View ===== */
-.income-compact-list {
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    overflow: hidden;
-}
-
-.income-compact-header {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 80px;
-    gap: 8px;
-    padding: 10px 12px;
-    background: var(--bg-color);
     font-weight: 600;
-    font-size: 0.85rem;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.income-compact-row {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 80px;
-    gap: 8px;
-    padding: 10px 12px;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.9rem;
-    transition: background 0.2s;
-}
-
-.income-compact-row:last-child {
-    border-bottom: none;
-}
-
-.income-compact-row:hover {
-    background: var(--bg-color);
-}
-
-.income-compact-row.active {
-    border-right: 3px solid var(--success-color);
-}
-
-.income-compact-row.skipped {
-    border-right: 3px solid var(--warning-color);
-    background: rgba(251, 191, 36, 0.05);
-}
-
-.income-compact-row.ended {
-    border-right: 3px solid var(--text-secondary);
-    opacity: 0.6;
-}
-
-.income-compact-row.inactive {
-    opacity: 0.5;
-}
-
-.compact-col-desc {
-    font-weight: 500;
+    color: var(--text-color);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.compact-col-amount {
-    font-weight: 600;
-    color: var(--success-color);
-}
-
-.compact-col-status {
+.finance-card-meta {
     font-size: 0.8rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-align: center;
-}
-
-.status-active {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--success-color);
-}
-
-.status-skipped {
-    background: rgba(251, 191, 36, 0.15);
-    color: #b45309;
-}
-
-.status-ended {
-    background: var(--bg-color);
     color: var(--text-secondary);
 }
 
-.status-inactive {
-    background: var(--bg-color);
-    color: var(--text-secondary);
+.finance-card-amount {
+    font-size: 1.15rem;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.compact-col-actions {
+.income-amount-text { color: var(--success-color); }
+.expense-amount-text { color: var(--danger-color); }
+
+.finance-card-bottom {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.finance-card-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.btn-action {
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
     gap: 4px;
-    justify-content: center;
+    transition: all 0.15s;
+    white-space: nowrap;
 }
 
-.compact-col-actions .btn-icon {
-    padding: 4px;
-    font-size: 0.9rem;
+.btn-action.btn-receive {
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+    font-weight: 600;
 }
 
-/* ===== Future Expenses Month View ===== */
-.month-group {
-    margin-bottom: 16px;
+.btn-action.btn-receive:hover {
+    background: rgba(16, 185, 129, 0.25);
 }
 
-.month-group-header {
+.btn-action.btn-neutral {
+    background: var(--bg-color);
+    color: var(--text-secondary);
+    padding: 6px 8px;
+}
+
+.btn-action.btn-neutral:hover {
+    background: var(--border-color);
+}
+
+.btn-action.btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #b91c1c;
+    padding: 6px 8px;
+}
+
+.btn-action.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.finance-card-comment {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* ===== Finance Month Sections ===== */
+.finance-month-section {
+    margin-bottom: 20px;
+}
+
+.current-month-section {
+    /* extra emphasis for current month */
+}
+
+.finance-month-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6366f1 100%);
     color: white;
-    cursor: pointer;
-    border-radius: 8px 8px 0 0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    font-weight: 600;
 }
 
-.month-group-header:hover {
-    background: var(--primary-hover);
+.month-title-text {
+    font-size: 1.05rem;
 }
 
-.month-info h3 {
-    margin: 0;
-    font-size: 1.1rem;
-}
-
-.month-stats {
-    font-size: 0.8rem;
+.month-title-stats {
+    font-size: 0.82rem;
     opacity: 0.9;
 }
 
-.month-total {
-    text-align: left;
+.finance-section-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 8px 4px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.month-total .total-label {
-    display: block;
-    font-size: 0.75rem;
+.finance-section-label.pending-label { color: var(--warning-color); }
+.finance-section-label.received-label { color: var(--success-color); }
+
+.finance-empty-month {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* ===== Finance Month Groups (collapsible) ===== */
+.finance-month-group {
+    margin-bottom: 10px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.finance-month-group.current-month {
+    border-color: var(--primary-color);
+}
+
+.finance-month-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-color);
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+}
+
+.finance-month-group.current-month .finance-month-group-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6366f1 100%);
+    color: white;
+}
+
+.finance-month-group-header:hover {
+    background: var(--border-color);
+}
+
+.finance-month-group.current-month .finance-month-group-header:hover {
+    background: var(--primary-hover);
+}
+
+.finance-month-group-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.group-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.group-stats {
+    font-size: 0.78rem;
     opacity: 0.8;
 }
 
-.month-total .total-amount {
-    font-size: 1.1rem;
+.group-total {
     font-weight: 700;
+    font-size: 1.05rem;
+    white-space: nowrap;
 }
 
-.month-group-content {
-    border: 1px solid var(--border-color);
-    border-top: none;
-    border-radius: 0 0 8px 8px;
+.finance-month-group-body {
+    padding: 10px;
+    background: var(--card-bg);
+    max-height: 3000px;
     overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
 }
 
-.month-group-content.collapsed {
-    display: none;
-}
-
-.month-group-content table {
-    margin-bottom: 0;
+.finance-month-group-body.collapsed {
+    max-height: 0;
+    padding: 0 10px;
 }
 
 /* Status badges for future expenses */
-tr.skipped {
-    background: rgba(245, 158, 11, 0.1);
-}
-
 .status-badge.skipped {
     background: var(--warning-color);
     color: white;

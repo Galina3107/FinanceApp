@@ -2,7 +2,7 @@
 
 const FutureExpenses = {
     expenses: [],
-    viewMode: 'list', // 'list' or 'month'
+    viewMode: 'month', // 'list' or 'month' — default to month
 
     async init() {
         await this.loadExpenses();
@@ -38,31 +38,15 @@ const FutureExpenses = {
     },
 
     renderList(container) {
-        // Sort by date
         const sorted = [...this.expenses].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
-        let html = `<div class="card"><div class="table-container"><table id="future-table">
-            <thead>
-                <tr>
-                    <th>${t('description')}</th>
-                    <th>${t('amount')}</th>
-                    <th>${t('dueDate')}</th>
-                    <th>${t('category')}</th>
-                    <th>${t('subcategory')}</th>
-                    <th>${t('frequency')}</th>
-                    <th>${t('status')}</th>
-                    <th>${t('actions')}</th>
-                </tr>
-            </thead>
-            <tbody>`;
-
-        html += sorted.map(expense => this.renderExpenseRow(expense)).join('');
-        html += '</tbody></table></div></div>';
+        let html = '<div class="finance-cards-list">';
+        html += sorted.map(expense => this.renderExpenseCard(expense)).join('');
+        html += '</div>';
         container.innerHTML = html;
     },
 
     renderByMonth(container) {
-        // Group by month/year
         const grouped = {};
         const months = I18n.getMonths();
         
@@ -70,94 +54,82 @@ const FutureExpenses = {
             const date = new Date(expense.dueDate);
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
             const label = `${months[date.getMonth()]} ${date.getFullYear()}`;
-            
-            if (!grouped[key]) {
-                grouped[key] = { label, expenses: [] };
-            }
+            if (!grouped[key]) grouped[key] = { label, expenses: [] };
             grouped[key].expenses.push(expense);
         });
 
-        // Sort keys chronologically
         const sortedKeys = Object.keys(grouped).sort();
+        const currentKey = `${getCurrentYear()}-${String(getCurrentMonth()).padStart(2, '0')}`;
         
         let html = '';
         sortedKeys.forEach(key => {
             const group = grouped[key];
             const total = sumArray(group.expenses, 'amount');
             const paidCount = group.expenses.filter(e => e.paid).length;
+            const unpaidTotal = sumArray(group.expenses.filter(e => !e.paid), 'amount');
+            const isCurrent = key === currentKey;
             
             html += `
-                <div class="card month-group">
-                    <div class="month-group-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
-                        <div class="month-info">
-                            <h3>${group.label}</h3>
-                            <span class="month-stats">${group.expenses.length} ${t('expensesCount')} | ${paidCount} ${t('paidCount')}</span>
+                <div class="finance-month-group ${isCurrent ? 'current-month' : ''}">
+                    <div class="finance-month-group-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+                        <div class="finance-month-group-info">
+                            <span class="group-title">${isCurrent ? '📅 ' : ''}${group.label}</span>
+                            <span class="group-stats">${paidCount}/${group.expenses.length} ${t('paidCount')} · ${t('remaining')}: ${formatCurrency(unpaidTotal)}</span>
                         </div>
-                        <div class="month-total">
-                            <span class="total-label">${t('total')}:</span>
-                            <span class="total-amount">${formatCurrency(total)}</span>
-                        </div>
+                        <span class="group-total">${formatCurrency(total)}</span>
                     </div>
-                    <div class="month-group-content">
-                        <table class="future-table">
-                            <thead>
-                                <tr>
-                                    <th>${t('description')}</th>
-                                    <th>${t('amount')}</th>
-                                    <th>${t('day')}</th>
-                                    <th>${t('category')}</th>
-                                    <th>${t('subcategory')}</th>
-                                    <th>${t('frequency')}</th>
-                                    <th>${t('status')}</th>
-                                    <th>${t('actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${group.expenses.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).map(e => this.renderExpenseRow(e, true)).join('')}
-                            </tbody>
-                        </table>
+                    <div class="finance-month-group-body ${isCurrent ? '' : 'collapsed'}">
+                        <div class="finance-cards-list">
+                            ${group.expenses.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).map(e => this.renderExpenseCard(e)).join('')}
+                        </div>
                     </div>
                 </div>
             `;
         });
 
-        container.innerHTML = html || `<div class="card"><p style="text-align: center; padding: 40px;">${t('noFutureExpenses')}</p></div>`;
+        container.innerHTML = html || `<div class="card"><div class="empty-state"><span>📅</span><p>${t('noFutureExpenses')}</p></div></div>`;
     },
 
-    renderExpenseRow(expense, showDayOnly = false) {
+    renderExpenseCard(expense) {
         const isPast = new Date(expense.dueDate) < new Date();
         const isSkipped = expense.skippedMonths?.includes(this.getMonthKey(expense.dueDate));
-        const statusClass = expense.paid ? 'paid' : (isSkipped ? 'skipped' : (isPast ? 'overdue' : 'pending'));
-        const statusText = expense.paid ? t('paid') : (isSkipped ? t('skipped') : (isPast ? t('overdue') : t('pending')));
-
-        const dateDisplay = showDayOnly ? 
-            new Date(expense.dueDate).getDate() : 
-            formatDate(expense.dueDate);
+        
+        let statusClass, statusText, statusIcon;
+        if (expense.paid) {
+            statusClass = 'paid'; statusText = t('paid'); statusIcon = '✅';
+        } else if (isSkipped) {
+            statusClass = 'skipped'; statusText = t('skipped'); statusIcon = '⏭️';
+        } else if (isPast) {
+            statusClass = 'overdue'; statusText = t('overdue'); statusIcon = '🔴';
+        } else {
+            statusClass = 'pending'; statusText = t('pending'); statusIcon = '⏳';
+        }
 
         return `
-            <tr class="${statusClass}">
-                <td>${expense.description}</td>
-                <td>${formatCurrency(expense.amount)}</td>
-                <td>${dateDisplay}</td>
-                <td>${expense.category || '-'}</td>
-                <td>${expense.subcategory || '-'}</td>
-                <td>${this.getFrequencyText(expense.frequency)}</td>
-                <td>
-                    <span class="status-badge ${statusClass}">${statusText}</span>
-                </td>
-                <td class="action-buttons">
-                    ${!expense.paid && !isSkipped ? `<button class="btn-icon mark-paid" data-id="${expense.id}" title="${t('markPaid')}">✅</button>` : ''}
-                    ${!expense.paid && expense.frequency !== 'once' ? `
-                        ${isSkipped ? 
-                            `<button class="btn-icon unskip-expense" data-id="${expense.id}" title="${t('unskip')}">↩️</button>` :
-                            `<button class="btn-icon skip-expense" data-id="${expense.id}" title="${t('skipMonth')}">⏭️</button>`
-                        }
-                        <button class="btn-icon stop-expense" data-id="${expense.id}" title="${t('stopMonthlyExpense')}">⏹️</button>
-                    ` : ''}
-                    <button class="btn-icon edit-future" data-id="${expense.id}" title="${t('edit')}">✏️</button>
-                    <button class="btn-icon delete-future" data-id="${expense.id}" title="${t('delete')}">🗑️</button>
-                </td>
-            </tr>
+            <div class="finance-card ${statusClass}" data-id="${expense.id}">
+                <div class="finance-card-top">
+                    <div class="finance-card-info">
+                        <span class="finance-card-desc">${expense.description}</span>
+                        <span class="finance-card-meta">${this.getFrequencyText(expense.frequency)} · ${formatDate(expense.dueDate)}${expense.category ? ` · ${expense.category}` : ''}</span>
+                    </div>
+                    <div class="finance-card-amount expense-amount-text">${formatCurrency(expense.amount)}</div>
+                </div>
+                <div class="finance-card-bottom">
+                    <span class="status-badge ${statusClass}">${statusIcon} ${statusText}</span>
+                    <div class="finance-card-actions">
+                        ${!expense.paid && !isSkipped ? `<button class="btn-action btn-receive mark-paid" data-id="${expense.id}" title="${t('markPaid')}">✅ ${t('markPaid')}</button>` : ''}
+                        ${!expense.paid && expense.frequency !== 'once' ? `
+                            ${isSkipped ? 
+                                `<button class="btn-action btn-neutral unskip-expense" data-id="${expense.id}">↩️</button>` :
+                                `<button class="btn-action btn-neutral skip-expense" data-id="${expense.id}">⏭️</button>`
+                            }
+                            <button class="btn-action btn-neutral stop-expense" data-id="${expense.id}">⏹️</button>
+                        ` : ''}
+                        <button class="btn-action btn-neutral edit-future" data-id="${expense.id}">✏️</button>
+                        <button class="btn-action btn-danger delete-future" data-id="${expense.id}">🗑️</button>
+                    </div>
+                </div>
+            </div>
         `;
     },
 

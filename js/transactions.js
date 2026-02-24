@@ -9,7 +9,7 @@ const Transactions = {
     async init() {
         // Set correct active toggle button for initial view
         if (this.currentView === 'category') {
-            document.querySelectorAll('.view-toggle .btn').forEach(b => {
+            document.querySelectorAll('#page-transactions .view-toggle .btn').forEach(b => {
                 b.classList.toggle('active', b.dataset.view === 'category');
             });
         }
@@ -475,9 +475,17 @@ const Transactions = {
         for (const item of this.pendingData) {
             if (item.category) continue;
             
-            const rule = rules.find(r => 
-                item.description.toLowerCase().includes(r.pattern.toLowerCase())
+            // First try exact full-description match
+            let rule = rules.find(r => 
+                r.fullDescription && item.description.toLowerCase() === r.fullDescription.toLowerCase()
             );
+            
+            // Then try pattern (partial) match
+            if (!rule) {
+                rule = rules.find(r => 
+                    item.description.toLowerCase().includes(r.pattern.toLowerCase())
+                );
+            }
             
             if (rule) {
                 item.category = rule.category;
@@ -489,17 +497,24 @@ const Transactions = {
 
     async saveCategoryRule(description, category, subcategory) {
         const pattern = description.split(/\s+/).slice(0, 3).join(' ');
+        const fullDescription = description.trim();
         
         const rules = await Database.getAll(STORES.CATEGORY_RULES);
-        const existing = rules.find(r => r.pattern === pattern);
+        // Check by full description first, then by pattern
+        const existing = rules.find(r => 
+            (r.fullDescription && r.fullDescription.toLowerCase() === fullDescription.toLowerCase()) ||
+            r.pattern === pattern
+        );
         
         if (existing) {
             existing.category = category;
             existing.subcategory = subcategory;
+            existing.fullDescription = fullDescription;
             await Database.update(STORES.CATEGORY_RULES, existing);
         } else {
             await Database.add(STORES.CATEGORY_RULES, {
                 pattern,
+                fullDescription,
                 category,
                 subcategory
             });
@@ -574,9 +589,9 @@ const Transactions = {
             searchInput.addEventListener('input', debounce(() => this.render(), 300));
         }
 
-        document.querySelectorAll('.view-toggle .btn').forEach(btn => {
+        document.querySelectorAll('#page-transactions .view-toggle .btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.view-toggle .btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#page-transactions .view-toggle .btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.currentView = e.target.dataset.view;
                 this.render();

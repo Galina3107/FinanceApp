@@ -66,6 +66,7 @@ const Budget = {
     renderBudgetChart(expenses, future, remaining) {
         const canvas = document.getElementById('budget-pie-chart');
         if (!canvas) return;
+        if (typeof Chart === 'undefined') { console.warn('Chart.js not loaded'); return; }
 
         if (this.chartInstance) {
             this.chartInstance.destroy();

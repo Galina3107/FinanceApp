@@ -173,6 +173,8 @@ function confirmDialog(title, message) {
             if (resolved) return;
             resolved = true;
             resolve(value);
+            // Re-initialize Modal listeners since we replaced button elements
+            setTimeout(() => Modal.init(), 0);
         };
         
         Modal.show(title, `<p>${message}</p>`, () => {
@@ -233,6 +235,10 @@ function debounce(func, wait) {
 
 // Export to Excel
 async function exportToExcel(data, filename) {
+    if (typeof XLSX === 'undefined') {
+        showToast(t('excelNotLoaded'));
+        return;
+    }
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Data');

@@ -2,7 +2,7 @@
 
 const Income = {
     incomes: [],
-    viewMode: 'list', // 'list' or 'month'
+    viewMode: 'month', // 'list' or 'month' — default to month
 
     async init() {
         await this.loadIncomes();
@@ -62,161 +62,183 @@ const Income = {
     },
 
     renderList(container, summaryHtml = '') {
-        // Sort by date
+        // Sort: pending first, then by date desc
         const sorted = [...this.incomes].sort((a, b) => {
+            // Pending (not received, not ended) first
+            const aPending = !a.received && !a.endDate ? 0 : 1;
+            const bPending = !b.received && !b.endDate ? 0 : 1;
+            if (aPending !== bPending) return aPending - bPending;
             const dateA = new Date(a.type === 'once' ? a.date : a.startDate);
             const dateB = new Date(b.type === 'once' ? b.date : b.startDate);
             return dateB - dateA;
         });
 
-        let html = summaryHtml + `<div class="card"><div class="table-container"><table id="income-table">
-            <thead>
-                <tr>
-                    <th>${t('description')}</th>
-                    <th>${t('amount')}</th>
-                    <th>${t('date')}</th>
-                    <th>${t('incomeType')}</th>
-                    <th>${t('status')}</th>
-                    <th>${t('actions')}</th>
-                </tr>
-            </thead>
-            <tbody>`;
-
-        html += sorted.map(income => this.renderIncomeRow(income)).join('');
-        html += '</tbody></table></div></div>';
+        let html = summaryHtml + '<div class="finance-cards-list">';
+        html += sorted.map(income => this.renderIncomeCard(income)).join('');
+        html += '</div>';
         container.innerHTML = html;
     },
 
     renderByMonth(container, summaryHtml = '') {
-        // Group by month/year  
-        const grouped = {};
+        const month = getCurrentMonth();
+        const year = getCurrentYear();
         const months = I18n.getMonths();
-        
-        this.incomes.forEach(income => {
+
+        // Get current month incomes by date
+        const currentMonthByDate = this.incomes.filter(income => {
+            const d = new Date(income.type === 'once' ? income.date : income.startDate);
+            return d.getMonth() + 1 === month && d.getFullYear() === year;
+        });
+
+        // Also include active monthly incomes from previous months (not yet received)
+        // This catches recurring incomes where the user forgot to mark them as received
+        const overdueRecurring = this.incomes.filter(income => {
+            if (income.type !== 'monthly' || income.received || income.endDate) return false;
+            const d = new Date(income.startDate);
+            const isThisMonth = d.getMonth() + 1 === month && d.getFullYear() === year;
+            if (isThisMonth) return false; // Already counted above
+            return this.isIncomeActive(income, month, year);
+        });
+
+        const currentMonthIncomes = [...currentMonthByDate, ...overdueRecurring];
+
+        // Get other months (exclude items already shown in current month)
+        const currentMonthIds = new Set(currentMonthIncomes.map(i => i.id));
+        const otherIncomes = this.incomes.filter(income => !currentMonthIds.has(income.id));
+
+        // Group other by month
+        const grouped = {};
+        otherIncomes.forEach(income => {
             const date = new Date(income.type === 'once' ? income.date : income.startDate);
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
             const label = `${months[date.getMonth()]} ${date.getFullYear()}`;
-            
-            if (!grouped[key]) {
-                grouped[key] = { label, incomes: [] };
-            }
+            if (!grouped[key]) grouped[key] = { label, incomes: [] };
             grouped[key].incomes.push(income);
         });
 
-        // Sort keys chronologically (reverse)
-        const sortedKeys = Object.keys(grouped).sort().reverse();
-        
-        let html = '';
-        sortedKeys.forEach(key => {
-            const group = grouped[key];
-            const total = sumArray(group.incomes, 'amount');
-            const receivedCount = group.incomes.filter(i => i.received).length;
-            
-            html += `
-                <div class="card month-group">
-                    <div class="month-group-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
-                        <div class="month-info">
-                            <h3>${group.label}</h3>
-                            <span class="month-stats">${group.incomes.length} ${t('incomeCount')} | ${receivedCount} ${t('receivedCount')}</span>
-                        </div>
-                        <div class="month-total">
-                            <span class="total-label">${t('total')}:</span>
-                            <span class="total-amount">${formatCurrency(total)}</span>
-                        </div>
-                    </div>
-                    <div class="month-group-content">
-                        <table class="income-table">
-                            <thead>
-                                <tr>
-                                    <th>${t('description')}</th>
-                                    <th>${t('amount')}</th>
-                                    <th>${t('day')}</th>
-                                    <th>${t('incomeType')}</th>
-                                    <th>${t('status')}</th>
-                                    <th>${t('actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${group.incomes.sort((a, b) => new Date(a.type === 'once' ? a.date : a.startDate) - new Date(b.type === 'once' ? b.date : b.startDate)).map(i => this.renderIncomeRow(i, true)).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        });
+        let html = summaryHtml;
 
-        container.innerHTML = summaryHtml + (html || `<div class="card"><p style="text-align: center; padding: 40px;">${t('noIncomes')}</p></div>`);
+        // Current month section — always open, prominent
+        const currentLabel = `${months[month - 1]} ${year}`;
+        const pendingCurrent = currentMonthIncomes.filter(i => !i.received && !i.endDate);
+        const receivedCurrent = currentMonthIncomes.filter(i => i.received);
+        
+        html += `<div class="finance-month-section current-month-section">`;
+        html += `<div class="finance-month-title">
+            <span class="month-title-text">📅 ${currentLabel}</span>
+            <span class="month-title-stats">${receivedCurrent.length}/${currentMonthIncomes.length} ${t('receivedCount')}</span>
+        </div>`;
+
+        if (pendingCurrent.length > 0) {
+            html += `<div class="finance-section-label pending-label">⏳ ${t('pendingIncome')}</div>`;
+            html += '<div class="finance-cards-list">';
+            html += pendingCurrent.map(i => this.renderIncomeCard(i)).join('');
+            html += '</div>';
+        }
+
+        if (receivedCurrent.length > 0) {
+            html += `<div class="finance-section-label received-label">✅ ${t('receivedIncome')}</div>`;
+            html += '<div class="finance-cards-list">';
+            html += receivedCurrent.map(i => this.renderIncomeCard(i)).join('');
+            html += '</div>';
+        }
+
+        if (currentMonthIncomes.length === 0) {
+            html += `<div class="finance-empty-month">${t('noIncomes')}</div>`;
+        }
+        html += '</div>';
+
+        // Other months — collapsed groups
+        const sortedKeys = Object.keys(grouped).sort().reverse();
+        if (sortedKeys.length > 0) {
+            html += `<div class="finance-section-label other-months-label" style="margin-top: 16px;">📆 ${t('otherMonths')}</div>`;
+            sortedKeys.forEach(key => {
+                const group = grouped[key];
+                const total = sumArray(group.incomes, 'amount');
+                const recCount = group.incomes.filter(i => i.received).length;
+                
+                html += `
+                    <div class="finance-month-group">
+                        <div class="finance-month-group-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+                            <div class="finance-month-group-info">
+                                <span class="group-title">${group.label}</span>
+                                <span class="group-stats">${group.incomes.length} ${t('incomeCount')} · ${recCount} ${t('receivedCount')}</span>
+                            </div>
+                            <span class="group-total">${formatCurrency(total)}</span>
+                        </div>
+                        <div class="finance-month-group-body collapsed">
+                            <div class="finance-cards-list">
+                                ${group.incomes.map(i => this.renderIncomeCard(i)).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        container.innerHTML = html;
     },
 
-    renderIncomeRow(income, showDayOnly = false) {
+    renderIncomeCard(income) {
         const month = getCurrentMonth();
         const year = getCurrentYear();
         const isActive = this.isIncomeActive(income, month, year);
         const skippedThisMonth = income.skippedMonths?.includes(`${year}-${month}`);
         
-        // For monthly incomes, check if it's the income's month (based on startDate)
         const incomeDate = new Date(income.type === 'once' ? income.date : income.startDate);
         const incomeMonth = incomeDate.getMonth() + 1;
         const incomeYear = incomeDate.getFullYear();
         const isIncomeMonth = incomeMonth === month && incomeYear === year;
         const isFutureIncome = incomeYear > year || (incomeYear === year && incomeMonth > month);
         
-        // Can mark as received: for monthly - if it's this income's month and not received/skipped
-        // For one-time - if it's active this month
         const canMarkReceived = !income.received && !income.endDate && 
             (income.type === 'monthly' ? (isIncomeMonth && !skippedThisMonth) : isActive);
         
-        let statusClass, statusText;
+        let statusClass, statusText, statusIcon;
         if (income.received) {
-            statusClass = 'paid';
-            statusText = t('received');
+            statusClass = 'paid'; statusText = t('received'); statusIcon = '✅';
         } else if (income.endDate) {
-            statusClass = 'ended';
-            statusText = t('ended');
+            statusClass = 'ended'; statusText = t('ended'); statusIcon = '⏹️';
         } else if (skippedThisMonth && isIncomeMonth) {
-            statusClass = 'skipped';
-            statusText = t('skipped');
+            statusClass = 'skipped'; statusText = t('skipped'); statusIcon = '⏭️';
         } else if (isIncomeMonth || isActive) {
-            statusClass = 'pending';
-            statusText = t('pending');
+            statusClass = 'pending'; statusText = t('pending'); statusIcon = '⏳';
         } else if (isFutureIncome) {
-            statusClass = 'future';
-            statusText = t('future');
+            statusClass = 'future'; statusText = t('future'); statusIcon = '🔮';
         } else {
-            statusClass = 'inactive';
-            statusText = t('inactive');
+            statusClass = 'inactive'; statusText = t('inactive'); statusIcon = '⚪';
         }
 
-        const dateDisplay = showDayOnly ? 
-            incomeDate.getDate() : 
-            formatDate(income.type === 'once' ? income.date : income.startDate);
-
+        const dateStr = formatDate(income.type === 'once' ? income.date : income.startDate);
         const typeText = income.type === 'once' ? t('oneTimeType') : t('monthly');
 
         return `
-            <tr class="${statusClass}">
-                <td>${income.description || '-'}</td>
-                <td>${formatCurrency(income.amount)}</td>
-                <td>${dateDisplay}</td>
-                <td>${typeText}</td>
-                <td>
-                    <span class="status-badge ${statusClass}">${statusText}</span>
-                </td>
-                <td class="action-buttons">
-                    ${canMarkReceived ? `<button class="btn-icon mark-received" data-id="${income.id}" title="${t('markReceived')}">✅</button>` : ''}
-                    ${!income.received && income.type === 'monthly' && !income.endDate && isIncomeMonth ? `
-                        ${skippedThisMonth ? 
-                            `<button class="btn-icon unskip-income" data-id="${income.id}" title="${t('returnIncome')}">↩️</button>` :
-                            `<button class="btn-icon skip-income" data-id="${income.id}" title="${t('skipMonth')}">⏭️</button>`
-                        }
-                    ` : ''}
-                    ${!income.received && income.type === 'monthly' && !income.endDate ? `
-                        <button class="btn-icon stop-income" data-id="${income.id}" title="${t('stopMonthly')}">⏹️</button>
-                    ` : ''}
-                    <button class="btn-icon edit-income" data-id="${income.id}" title="${t('edit')}">✏️</button>
-                    <button class="btn-icon delete-income" data-id="${income.id}" title="${t('delete')}">🗑️</button>
-                </td>
-            </tr>
+            <div class="finance-card ${statusClass}" data-id="${income.id}">
+                <div class="finance-card-top">
+                    <div class="finance-card-info">
+                        <span class="finance-card-desc">${income.description || t('income')}</span>
+                        <span class="finance-card-meta">${typeText} · ${dateStr}</span>
+                    </div>
+                    <div class="finance-card-amount income-amount-text">${formatCurrency(income.amount)}</div>
+                </div>
+                <div class="finance-card-bottom">
+                    <span class="status-badge ${statusClass}">${statusIcon} ${statusText}</span>
+                    <div class="finance-card-actions">
+                        ${canMarkReceived ? `<button class="btn-action btn-receive mark-received" data-id="${income.id}" title="${t('markReceived')}">✅ ${t('markReceived')}</button>` : ''}
+                        ${!income.received && income.type === 'monthly' && !income.endDate && isIncomeMonth ? `
+                            ${skippedThisMonth ? 
+                                `<button class="btn-action btn-neutral unskip-income" data-id="${income.id}">↩️</button>` :
+                                `<button class="btn-action btn-neutral skip-income" data-id="${income.id}">⏭️</button>`
+                            }
+                        ` : ''}
+                        ${!income.received && income.type === 'monthly' && !income.endDate ? 
+                            `<button class="btn-action btn-neutral stop-income" data-id="${income.id}">⏹️</button>` : ''}
+                        <button class="btn-action btn-neutral edit-income" data-id="${income.id}">✏️</button>
+                        <button class="btn-action btn-danger delete-income" data-id="${income.id}">🗑️</button>
+                    </div>
+                </div>
+                ${income.comment ? `<div class="finance-card-comment">${income.comment}</div>` : ''}
+            </div>
         `;
     },
 
@@ -258,13 +280,14 @@ const Income = {
         await this.loadIncomes();
         // Count all active incomes for this month (received or not)
         const activeIncomes = this.incomes.filter(income => {
-            const incomeDate = new Date(income.type === 'once' ? income.date : income.startDate);
-            const isThisMonth = incomeDate.getMonth() + 1 === month && incomeDate.getFullYear() === year;
             const skipped = income.skippedMonths?.includes(`${year}-${month}`);
+            if (skipped) return false;
             if (income.type === 'once') {
-                return isThisMonth && !skipped;
+                const incomeDate = new Date(income.date);
+                return incomeDate.getMonth() + 1 === month && incomeDate.getFullYear() === year;
             } else {
-                return isThisMonth && !income.endDate && !skipped;
+                // Monthly: active if within start/end range (catches recurring from previous months)
+                return this.isIncomeActive(income, month, year) && !income.received;
             }
         });
         return sumArray(activeIncomes, 'amount');
