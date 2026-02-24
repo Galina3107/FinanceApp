@@ -505,6 +505,46 @@ body {
 .summary-card.positive .amount { color: var(--success-color); }
 .summary-card.negative .amount { color: var(--danger-color); }
 
+/* Income pending hint on dashboard */
+.income-pending-hint {
+    font-size: 0.75rem;
+    color: var(--warning-color);
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* Income summary bar on income page */
+.income-summary-bar {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.income-summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 100px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--bg-color);
+}
+.income-summary-item .summary-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.income-summary-item .summary-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+.received-summary .summary-value { color: var(--success-color); }
+.pending-summary .summary-value { color: var(--warning-color); }
+.expected-summary .summary-value { color: var(--primary-color); }
+
 .dashboard-charts {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));

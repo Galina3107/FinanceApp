@@ -30,14 +30,38 @@ const Income = {
             return;
         }
 
+        // Calculate summary for current month
+        const month = getCurrentMonth();
+        const year = getCurrentYear();
+        const expectedTotal = await this.getExpectedIncomeForMonth(month, year);
+        const receivedTotal = await this.getTotalIncomeForMonth(month, year);
+        const pendingTotal = expectedTotal - receivedTotal;
+
+        let summaryHtml = `
+            <div class="card income-summary-bar">
+                <div class="income-summary-item received-summary">
+                    <span class="summary-label">✅ ${t('receivedIncome')}</span>
+                    <span class="summary-value">${formatCurrency(receivedTotal)}</span>
+                </div>
+                <div class="income-summary-item pending-summary">
+                    <span class="summary-label">⏳ ${t('pendingIncome')}</span>
+                    <span class="summary-value">${formatCurrency(pendingTotal)}</span>
+                </div>
+                <div class="income-summary-item expected-summary">
+                    <span class="summary-label">📊 ${t('expectedIncome')}</span>
+                    <span class="summary-value">${formatCurrency(expectedTotal)}</span>
+                </div>
+            </div>
+        `;
+
         if (this.viewMode === 'month') {
-            this.renderByMonth(container);
+            this.renderByMonth(container, summaryHtml);
         } else {
-            this.renderList(container);
+            this.renderList(container, summaryHtml);
         }
     },
 
-    renderList(container) {
+    renderList(container, summaryHtml = '') {
         // Sort by date
         const sorted = [...this.incomes].sort((a, b) => {
             const dateA = new Date(a.type === 'once' ? a.date : a.startDate);
@@ -45,7 +69,7 @@ const Income = {
             return dateB - dateA;
         });
 
-        let html = `<div class="card"><div class="table-container"><table id="income-table">
+        let html = summaryHtml + `<div class="card"><div class="table-container"><table id="income-table">
             <thead>
                 <tr>
                     <th>${t('description')}</th>
@@ -63,7 +87,7 @@ const Income = {
         container.innerHTML = html;
     },
 
-    renderByMonth(container) {
+    renderByMonth(container, summaryHtml = '') {
         // Group by month/year  
         const grouped = {};
         const months = I18n.getMonths();
@@ -121,7 +145,7 @@ const Income = {
             `;
         });
 
-        container.innerHTML = html || `<div class="card"><p style="text-align: center; padding: 40px;">${t('noIncomes')}</p></div>`;
+        container.innerHTML = summaryHtml + (html || `<div class="card"><p style="text-align: center; padding: 40px;">${t('noIncomes')}</p></div>`);
     },
 
     renderIncomeRow(income, showDayOnly = false) {
@@ -228,6 +252,22 @@ const Income = {
             return incomeDate.getMonth() + 1 === month && incomeDate.getFullYear() === year;
         });
         return sumArray(receivedIncomes, 'amount');
+    },
+
+    async getExpectedIncomeForMonth(month, year) {
+        await this.loadIncomes();
+        // Count all active incomes for this month (received or not)
+        const activeIncomes = this.incomes.filter(income => {
+            const incomeDate = new Date(income.type === 'once' ? income.date : income.startDate);
+            const isThisMonth = incomeDate.getMonth() + 1 === month && incomeDate.getFullYear() === year;
+            const skipped = income.skippedMonths?.includes(`${year}-${month}`);
+            if (income.type === 'once') {
+                return isThisMonth && !skipped;
+            } else {
+                return isThisMonth && !income.endDate && !skipped;
+            }
+        });
+        return sumArray(activeIncomes, 'amount');
     },
 
     bindEvents() {

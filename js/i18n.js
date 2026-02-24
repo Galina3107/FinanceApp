@@ -195,6 +195,9 @@ const I18n = {
             incomeCount: 'הכנסות',
             receivedCount: 'התקבלו',
             total: 'סה"כ',
+            expectedIncome: 'צפוי',
+            receivedIncome: 'התקבל',
+            pendingIncome: 'ממתין לקבלה',
             
             // Future Expenses
             futureTitle: 'הוצאות עתידיות',
@@ -560,6 +563,9 @@ const I18n = {
             incomeCount: 'incomes',
             receivedCount: 'received',
             total: 'Total',
+            expectedIncome: 'Expected',
+            receivedIncome: 'Received',
+            pendingIncome: 'Pending receipt',
             
             // Future Expenses
             futureTitle: 'Future Expenses',

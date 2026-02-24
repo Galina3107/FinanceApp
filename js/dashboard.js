@@ -21,6 +21,7 @@ const Dashboard = {
 
         const transactions = await Database.getAll(STORES.TRANSACTIONS);
         const monthlyIncome = await Income.getTotalIncomeForMonth(month, year);
+        const expectedIncome = await Income.getExpectedIncomeForMonth(month, year);
 
         const monthTransactions = transactions.filter(t => t.month === month && t.year === year);
         const totalExpenses = sumArray(monthTransactions, 'amount');
@@ -30,7 +31,22 @@ const Dashboard = {
 
         const balance = monthlyIncome - totalExpenses;
 
-        document.getElementById('total-income').textContent = formatCurrency(monthlyIncome);
+        // Show received income, and if there's pending income show it as subtitle
+        const incomeEl = document.getElementById('total-income');
+        if (incomeEl) {
+            incomeEl.textContent = formatCurrency(monthlyIncome);
+            // Show expected income hint if different from received
+            const pendingAmount = expectedIncome - monthlyIncome;
+            const hintEl = document.getElementById('income-pending-hint');
+            if (hintEl) {
+                if (pendingAmount > 0) {
+                    hintEl.textContent = `⏳ ${t('pending')}: ${formatCurrency(pendingAmount)}`;
+                    hintEl.style.display = '';
+                } else {
+                    hintEl.style.display = 'none';
+                }
+            }
+        }
         document.getElementById('total-expenses').textContent = formatCurrency(totalExpenses);
         document.getElementById('total-balance').textContent = formatCurrency(balance);
         document.getElementById('total-savings').textContent = formatCurrency(totalSavings);
@@ -48,7 +64,9 @@ const Dashboard = {
     async renderPieChart(transactions) {
         const canvas = document.getElementById('expenses-pie-chart');
         if (!canvas) return;
+        if (typeof Chart === 'undefined') { console.warn('Chart.js not loaded'); return; }
 
+        try {
         if (this.pieChart) {
             this.pieChart.destroy();
         }
@@ -117,12 +135,15 @@ const Dashboard = {
                 }
             }
         });
+        } catch (e) { console.error('Pie chart error:', e); }
     },
 
     async renderBarChart(allTransactions, year) {
         const canvas = document.getElementById('monthly-bar-chart');
         if (!canvas) return;
+        if (typeof Chart === 'undefined') { console.warn('Chart.js not loaded'); return; }
 
+        try {
         if (this.barChart) {
             this.barChart.destroy();
         }
@@ -177,5 +198,6 @@ const Dashboard = {
                 }
             }
         });
+        } catch (e) { console.error('Bar chart error:', e); }
     }
 };
